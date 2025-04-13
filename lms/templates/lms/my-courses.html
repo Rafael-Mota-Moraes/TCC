@@ -1,0 +1,19 @@
+{% extends "global/base.html" %} {% block content %}
+<div class="container">
+  <h1>Meus cursos</h1>
+</div>
+
+<div class="container">
+  {% for course in courses %}
+    <div class="course-card">
+      <h2>{{course.title}}</h2>
+      <p>{{course.description}}</p>
+      <a href="{% url 'edit-course' %}">Editar Este Curso</a>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="container">
+  <a href="{% url 'create-course' %}">Cadastrar um novo curso</a>
+</div>
+{% endblock %}

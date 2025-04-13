@@ -1,0 +1,17 @@
+{% extends "global/base.html" %}
+{% load static %}
+{% block content %}
+<div class="login-wrapper">
+  <div class="container login-container">
+    <h2 class="login-title">Entrar</h2>
+    <form class="login-form" method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Entrar</button>
+    </form>
+    <p class="register-link">
+      Ainda não tem conta? <a href="{% url 'register' %}">Cadastre-se</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
