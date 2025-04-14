@@ -1,19 +1,53 @@
-{% extends "global/base.html" %} {% block content %}
-<div class="container">
-  <h1>Meus cursos</h1>
-</div>
-
-<div class="container">
-  {% for course in courses %}
-    <div class="course-card">
-      <h2>{{course.title}}</h2>
-      <p>{{course.description}}</p>
-      <a href="{% url 'edit-course' %}">Editar Este Curso</a>
+{% extends "global/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Meus Cursos</h1>
+        <a href="{% url 'create-course' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Novo Curso
+        </a>
     </div>
-  {% endfor %}
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="row">
+        {% if courses %}
+            {% for course in courses %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ course.title }}</h5>
+                            <p class="card-text">{{ course.description|default:"Sem descrição"|truncatewords:20 }}</p>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Criado em: {{ course.created_at|date:"d/m/Y" }}</small>
+                                <a href="{% url 'edit-course' course.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col">
+                <div class="alert alert-info">
+                    Você ainda não tem cursos. <a href="{% url 'create-course' %}">Crie um novo curso</a>.
+                </div>
+            </div>
+        {% endif %}
+    </div>
 </div>
+{% endblock %}
 
-<div class="container">
-  <a href="{% url 'create-course' %}">Cadastrar um novo curso</a>
-</div>
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
 {% endblock %}

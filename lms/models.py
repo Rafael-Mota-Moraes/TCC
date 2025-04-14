@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
 
 class Course(models.Model):
@@ -38,39 +38,13 @@ class Course(models.Model):
         return self.title
 
 
-class Module(models.Model):
+class Lecture(models.Model):
     course = models.ForeignKey(
         Course,
-        related_name="modules",
-        on_delete=models.CASCADE,
-        verbose_name="Curso",
-    )
-    title = models.CharField(
-        verbose_name="Título do módulo",
-        max_length=255,
-        blank=False,
-        null=False,
-    )
-    order = models.PositiveIntegerField(
-        verbose_name="Ordem",
-        default=0,
-    )
-
-    class Meta:
-        verbose_name = "Módulo"
-        verbose_name_plural = "Módulos"
-        ordering = ["order"]
-
-    def __str__(self):
-        return f"{self.title} - {self.course.title}"
-
-
-class Lecture(models.Model):
-    module = models.ForeignKey(
-        Module,
         related_name="lectures",
         on_delete=models.CASCADE,
-        verbose_name="Módulo",
+        verbose_name="Curso",
+        null=True,
     )
     title = models.CharField(
         verbose_name="Título da aula",
@@ -97,4 +71,4 @@ class Lecture(models.Model):
         ordering = ["order"]
 
     def __str__(self):
-        return f"{self.title} - {self.module.title}"
+        return f"{self.title} - {self.course.title}"

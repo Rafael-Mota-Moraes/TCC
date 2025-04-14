@@ -2,9 +2,8 @@
 
 ## TODO LIST V1
 
-[ ] - Cadastro de cursos \
-[ ] - Cadastro de aulas (em formato de vídeo) \
+[X] - Cadastro de cursos \
+[X] - Cadastro de aulas (em formato de vídeo) \
 [X] - Sistema de login \
 [ ] - Matrícula em curso \
 [ ] - Lista de meus cursos \
-fsdikjfk

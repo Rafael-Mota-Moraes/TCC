@@ -1,0 +1,273 @@
+{% extends "global/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Criação de curso</h1>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="title" class="form-label">Título do curso</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="description" class="form-label">Descrição do curso</label>
+            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Criar curso</button>
+    </form>
+    
+    <div id="lectures-section" class="mt-5" style="display: none;">
+        <h2>Adicionar aulas</h2>
+        
+        <form id="lecture-form" method="post" action="{% url 'add-lecture' 0 %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" id="course_id" name="course_id" value="">
+            
+            <div class="mb-3">
+                <label for="lecture_title" class="form-label">Título da aula</label>
+                <input type="text" class="form-control" id="lecture_title" name="title" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="video_content" class="form-label">Vídeo da aula</label>
+                <input type="file" class="form-control" id="video_content" name="video_content" required>
+            </div>
+            
+            <button type="submit" class="btn btn-secondary">Adicionar aula</button>
+        </form>
+        
+        <div class="mt-4">
+            <h3>Aulas do curso</h3>
+            <div id="lecture-list" class="list-group mb-4">
+            </div>
+            <button id="save-order" class="btn btn-success">Salvar ordem das aulas</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        
+        fetch('{% url "create-course" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('lectures-section').style.display = 'block';
+                document.getElementById('course_id').value = data.course_id;
+                document.getElementById('lecture-form').action = "{% url 'add-lecture' 0 %}".replace('0', data.course_id);
+                
+                const inputs = form.querySelectorAll('input, textarea, button');
+                inputs.forEach(input => input.disabled = true);
+                
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success mt-3';
+                alert.textContent = 'Curso criado com sucesso! Agora você pode adicionar aulas.';
+                form.appendChild(alert);
+
+                loadLectures(data.course_id);
+            } else {
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-danger mt-3';
+                alert.textContent = data.error || 'Ocorreu um erro ao criar o curso.';
+                form.appendChild(alert);
+            }
+        })
+        .catch(error => console.error('Erro:', error));
+    });
+    
+    const lectureForm = document.getElementById('lecture-form');
+    lectureForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(lectureForm);
+        const courseId = document.getElementById('course_id').value;
+        
+        fetch(lectureForm.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('lecture_title').value = '';
+                document.getElementById('video_content').value = '';
+                
+                loadLectures(courseId);
+                
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success mt-3';
+                alert.textContent = 'Aula adicionada com sucesso!';
+                lectureForm.appendChild(alert);
+                
+                setTimeout(() => alert.remove(), 3000);
+            } else {
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-danger mt-3';
+                alert.textContent = data.error || 'Ocorreu um erro ao adicionar a aula.';
+                lectureForm.appendChild(alert);
+                
+                setTimeout(() => alert.remove(), 3000);
+            }
+        })
+        .catch(error => console.error('Erro:', error));
+    });
+    
+    document.getElementById('save-order').addEventListener('click', function() {
+        const courseId = document.getElementById('course_id').value;
+        const lectureItems = document.querySelectorAll('.lecture-item');
+        const orderData = Array.from(lectureItems).map((item, index) => {
+            return {
+                id: item.dataset.id,
+                order: index
+            };
+        });
+        
+        fetch(`/reordenar-aulas/${courseId}/`, {
+            method: 'POST',
+            body: JSON.stringify({lectures: orderData}),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success mt-3';
+                alert.textContent = 'Ordem das aulas salva com sucesso!';
+                document.getElementById('lecture-list').parentNode.appendChild(alert);
+                
+                setTimeout(() => alert.remove(), 3000);
+            } else {
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-danger mt-3';
+                alert.textContent = data.error || 'Ocorreu um erro ao salvar a ordem das aulas.';
+                document.getElementById('lecture-list').parentNode.appendChild(alert);
+                
+                setTimeout(() => alert.remove(), 3000);
+            }
+        })
+        .catch(error => console.error('Erro:', error));
+    });
+});
+
+function loadLectures(courseId) {
+    fetch(`/aulas-curso/${courseId}/`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const lectureList = document.getElementById('lecture-list');
+        lectureList.innerHTML = '';
+        
+        if (data.lectures.length === 0) {
+            lectureList.innerHTML = '<div class="alert alert-info">Nenhuma aula adicionada ainda.</div>';
+            return;
+        }
+        
+        data.lectures.forEach(lecture => {
+            const lectureItem = document.createElement('div');
+            lectureItem.className = 'list-group-item lecture-item';
+            lectureItem.dataset.id = lecture.id;
+            lectureItem.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-grip-vertical me-2 handle"></i>
+                        <span>${lecture.title}</span>
+                    </div>
+                    <button class="btn btn-sm btn-danger delete-lecture" data-id="${lecture.id}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            lectureList.appendChild(lectureItem);
+        });
+        
+        initSortable();
+
+        document.querySelectorAll('.delete-lecture').forEach(button => {
+            button.addEventListener('click', function() {
+                deleteLecture(this.dataset.id, courseId);
+            });
+        });
+    })
+    .catch(error => console.error('Erro:', error));
+}
+
+function initSortable() {
+    if (typeof Sortable !== 'undefined') {
+        new Sortable(document.getElementById('lecture-list'), {
+            animation: 150,
+            handle: '.handle',
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+        });
+    } else {
+        console.error('Sortable.js não está carregado.');
+    }
+}
+
+function deleteLecture(lectureId, courseId) {
+    if (!confirm('Tem certeza que deseja excluir esta aula?')) {
+        return;
+    }
+    
+    fetch(`/excluir-aula/${lectureId}/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadLectures(courseId);
+        } else {
+            alert(data.error || 'Ocorreu um erro ao excluir a aula.');
+        }
+    })
+    .catch(error => console.error('Erro:', error));
+}
+</script>
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<style>
+    .handle {
+        cursor: grab;
+    }
+    .sortable-ghost {
+        opacity: 0.5;
+        background: #c8ebfb;
+    }
+    .sortable-chosen {
+        background: #e9ecef;
+    }
+</style>
+{% endblock %}

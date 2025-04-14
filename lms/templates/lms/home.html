@@ -1,3 +1,59 @@
-{% extends "global/base.html" %} {% block content %}
-<h1>Página Home</h1>
+{% extends "global/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="jumbotron bg-light p-5 rounded">
+        <h1 class="display-4">Plataforma EAD</h1>
+        <p class="lead">Crie e gerencie seus cursos e aulas de forma gratuita e eficiente.</p>
+        <hr class="my-4">
+        <p>Compartilhe conhecimento de forma livre e sem burocracias</p>
+        <div class="mt-4">
+            {% if user.is_authenticated %}
+                <a class="btn btn-primary btn-lg" href="{% url 'my-courses' %}" role="button">
+                    <i class="bi bi-collection"></i> Meus Cursos
+                </a>
+                <a class="btn btn-success btn-lg ms-2" href="{% url 'create-course' %}" role="button">
+                    <i class="bi bi-plus-circle"></i> Criar Novo Curso
+                </a>
+            {% else %}
+                <p>Para começar, faça login no sistema.</p>
+                <a class="btn btn-primary btn-lg" href="{% url 'login' %}" role="button">
+                    <i class="bi bi-box-arrow-in-right"></i> Entrar
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="jumbotron bg-light p-5 rounded mt-5">
+        <h2 class="h2">Cursos disponíveis na nossa plataforma</h2>
+    </div>
+    
+    <div class="mt-5">
+        <div class="row d-flex gap-3">
+            {% for course in courses %}
+              <div class="col-md-4">
+                <div class="card h-100">
+                  <div class="card-body text-left">
+                    <h3>{{ course.title }}</h3>
+                    <p>{{ course.description }}</p>
+                    <p>Publicado por: {{ course.belongs_to }}</p>
+                    <div class="text-center">
+                        <a href="/informacoes-curso/id" class="btn btn-primary">Mais informações sobre este curso</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
+<style>
+    .jumbotron {
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+    }
+</style>
 {% endblock %}
