@@ -88,3 +88,26 @@ class UserCourseRegistration(models.Model):
         verbose_name="Curso",
         null=True,
     )
+
+
+class UserLecturesRelation(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    lecture = models.ForeignKey(
+        Lecture,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    course = models.ForeignKey(
+        Course,
+        related_name="course_lecture_user_relation",
+        on_delete=models.CASCADE,
+        verbose_name="Curso",
+        null=True,
+    )
+    is_concluded = models.BooleanField(default=False)

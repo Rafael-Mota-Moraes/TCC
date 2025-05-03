@@ -60,7 +60,7 @@
                         <div class="card-body">
                             <h5 class="card-title">{{ registration.course.title }}</h5>
                             <p class="card-text">{{ registration.course.description|default:"Sem descrição"|truncatewords:20 }}</p>
-                            <a class="btn btn-success" href="">Assistir curso</a>
+                            <a class="btn btn-success" href="{% url 'watch-course' registration.course.id %}">Assistir curso</a>
                         </div>
                     </div>
                 </div>

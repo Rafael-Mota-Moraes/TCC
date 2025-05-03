@@ -4,11 +4,11 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .models import Course, Lecture, UserCourseRegistration
+from .models import Course, Lecture, UserCourseRegistration, UserLecturesRelation
 
 
 def home(request):
@@ -233,6 +233,14 @@ def register_in_course(request, course_id):
         )
         registration.save()
 
+        course_lectures = Lecture.objects.filter(course=course)
+
+        for lecture in course_lectures:
+            new_user_lecture_relation = UserLecturesRelation(
+                user=request.user, lecture=lecture, course=course
+            )
+            new_user_lecture_relation.save()
+
         messages.success(
             request=request,
             message=f"Parabéns! Você está matriculado no curso {course.title}",
@@ -245,3 +253,8 @@ def register_in_course(request, course_id):
             message="Ocorreu algum erro, tente novamente",
         )
         return redirect("home-page")
+
+
+def watch_course(request, course_id):
+    context = {}
+    return render(request, "lms/watch-course.html", context=context)
