@@ -5,5 +5,6 @@
 [X] - Cadastro de cursos \
 [X] - Cadastro de aulas (em formato de vídeo) \
 [X] - Sistema de login \
-[ ] - Matrícula em curso \
-[ ] - Lista de meus cursos \
+[X] - Matrícula em curso \
+[X] - Lista de meus cursos \
+[ ] - Player de vídeo com opção de concluir aulas

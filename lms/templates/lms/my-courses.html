@@ -45,6 +45,35 @@
             </div>
         {% endif %}
     </div>
+
+    <hr />
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Cursos que estou matriculado</h1>
+    </div>
+
+    <div class="row">
+        {% if registered_courses %}
+            {% for registration in registered_courses %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ registration.course.title }}</h5>
+                            <p class="card-text">{{ registration.course.description|default:"Sem descrição"|truncatewords:20 }}</p>
+                            <a class="btn btn-success" href="">Assistir curso</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col">
+                <div class="alert alert-info">
+                    Você ainda não está matriculado em nenhum curso.
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
 </div>
 {% endblock %}
 

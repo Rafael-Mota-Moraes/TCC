@@ -1,0 +1,32 @@
+{% extends "global/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Informações sobre o curso: {{ course.title }}</h1>
+    
+    <h2>Descrição do curso</h2>
+    <p class="mb-4">{{ course.description }}</p>
+    <p>Este curso foi publicado por: {{ course.belongs_to.username }}</p>
+    <hr />
+
+    <h2>Conteúdo do curso</h2>
+
+    <ul style="margin: 0; padding: 0;">
+        {% for lecture in lectures %}
+            <li> <i class="bi bi-camera-reels" style="margin-right: 10px;"></i> {{ lecture.title }} </li>
+        {% endfor %}
+    </ul>
+
+    <hr />
+    
+    {% if is_registered %}
+        <button class="btn btn-primary" disabled>Você já está matriculado neste curso</button>
+    {% else %}
+        <a class="btn btn-primary" href="{% url 'register-in-course' course.id %}"><i class="bi bi-bell-fill"></i> Fazer matrícula</a>
+    {% endif %}
+
+</div>
+{% endblock %}
+{% block extra_head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>  
+{% endblock %}

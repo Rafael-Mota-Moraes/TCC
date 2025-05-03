@@ -72,3 +72,19 @@ class Lecture(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.course.title}"
+
+
+class UserCourseRegistration(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    course = models.ForeignKey(
+        Course,
+        related_name="course_registration",
+        on_delete=models.CASCADE,
+        verbose_name="Curso",
+        null=True,
+    )

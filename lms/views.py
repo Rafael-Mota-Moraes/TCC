@@ -4,11 +4,11 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .models import Course, Lecture
+from .models import Course, Lecture, UserCourseRegistration
 
 
 def home(request):
@@ -20,7 +20,14 @@ def home(request):
 @login_required
 def my_courses(request):
     courses = Course.objects.filter(belongs_to=request.user)
-    return render(request, "lms/my-courses.html", {"courses": courses})
+
+    registered_courses = UserCourseRegistration.objects.filter(user=request.user)
+
+    return render(
+        request,
+        "lms/my-courses.html",
+        {"courses": courses, "registered_courses": registered_courses},
+    )
 
 
 @login_required
@@ -201,3 +208,40 @@ def edit_course(request, course_id):
 
     context = {"course": course, "lectures": lectures}
     return render(request, "lms/edit-course.html", context)
+
+
+def course_infos(request, course_id):
+    course = Course.objects.filter(id=course_id).first()
+    lectures = Lecture.objects.filter(course=course).order_by("order")
+
+    registered = UserCourseRegistration.objects.filter(
+        user=request.user, course=course
+    ).first()
+
+    is_registered = True if registered else False
+
+    context = {"course": course, "lectures": lectures, "is_registered": is_registered}
+    return render(request, "lms/course-infos.html", context)
+
+
+def register_in_course(request, course_id):
+    try:
+        course = Course.objects.filter(id=course_id).first()
+        registration = UserCourseRegistration(
+            user=request.user,
+            course=course,
+        )
+        registration.save()
+
+        messages.success(
+            request=request,
+            message=f"Parabéns! Você está matriculado no curso {course.title}",
+        )
+
+        return redirect("my-courses")
+    except Exception:
+        messages.error(
+            request=request,
+            message="Ocorreu algum erro, tente novamente",
+        )
+        return redirect("home-page")

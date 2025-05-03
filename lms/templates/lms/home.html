@@ -37,7 +37,7 @@
                     <p>{{ course.description }}</p>
                     <p>Publicado por: {{ course.belongs_to }}</p>
                     <div class="text-center">
-                        <a href="/informacoes-curso/id" class="btn btn-primary">Mais informações sobre este curso</a>
+                        <a href="{% url 'course-infos' course.id %}" class="btn btn-primary">Mais informações sobre este curso</a>
                     </div>
                   </div>
                 </div>

@@ -21,4 +21,10 @@ urlpatterns = [
         name="reorder-lectures",
     ),
     path("excluir-aula/<int:lecture_id>/", views.delete_lecture, name="delete-lecture"),
+    path("informacoes-curso/<int:course_id>/", views.course_infos, name="course-infos"),
+    path(
+        "criar-matricula/<int:course_id>/",
+        views.register_in_course,
+        name="register-in-course",
+    ),
 ]
