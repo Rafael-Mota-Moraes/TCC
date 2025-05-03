@@ -1,5 +1,20 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
+
+
+def validate_mp4_extension(value):
+    if not value.name.lower().endswith(".mp4"):
+        raise ValidationError("Apenas arquivos MP4 são permitidos")
+
+
+def get_video_mime_type(filename):
+    extension = filename.split(".")[-1].lower()
+    return {
+        "mp4": "video/mp4",
+        "webm": "video/webm",
+        "mkv": "video/x-matroska",
+    }.get(extension, "video/mp4")
 
 
 class Course(models.Model):
@@ -40,7 +55,7 @@ class Course(models.Model):
 
 class Lecture(models.Model):
     course = models.ForeignKey(
-        Course,
+        "Course",
         related_name="lectures",
         on_delete=models.CASCADE,
         verbose_name="Curso",
@@ -55,7 +70,9 @@ class Lecture(models.Model):
     video_content = models.FileField(
         verbose_name="Conteúdo em vídeo",
         upload_to="lectures/videos/",
+        validators=[validate_mp4_extension],
     )
+
     order = models.PositiveIntegerField(
         verbose_name="Ordem",
         default=0,
@@ -72,6 +89,9 @@ class Lecture(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.course.title}"
+
+    def get_video_mime_type(self):
+        return get_video_mime_type(self.video_content.name)
 
 
 class UserCourseRegistration(models.Model):

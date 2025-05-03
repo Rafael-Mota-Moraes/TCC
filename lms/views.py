@@ -256,5 +256,89 @@ def register_in_course(request, course_id):
 
 
 def watch_course(request, course_id):
-    context = {}
+    course = Course.objects.get(id=course_id)
+
+    is_enrolled = UserCourseRegistration.objects.filter(
+        user=request.user, course=course
+    ).exists()
+
+    if not is_enrolled:
+        messages.error(request, "Você não está matriculado neste curso.")
+        return redirect("courses_list")
+
+    lectures = Lecture.objects.filter(course=course).order_by("order")
+    lecture_id = request.GET.get("lecture", None)
+    try:
+        if lecture_id:
+            current_lecture = lectures.get(id=lecture_id)
+        else:
+            current_lecture = lectures.first()
+    except (Lecture.DoesNotExist, AttributeError):
+        current_lecture = None
+
+    current_lecture = None
+    if lecture_id:
+        try:
+            current_lecture = lectures.get(id=lecture_id)
+        except Lecture.DoesNotExist:
+            if lectures.exists():
+                current_lecture = lectures.first()
+    elif lectures.exists():
+        current_lecture = lectures.first()
+
+    lecture_progress = {}
+    completed_lectures = 0
+
+    for lecture in lectures:
+        user_lecture, created = UserLecturesRelation.objects.get_or_create(
+            user=request.user,
+            lecture=lecture,
+            course=course,
+            defaults={"is_concluded": False},
+        )
+        lecture_progress[lecture.id] = user_lecture.is_concluded
+
+        if user_lecture.is_concluded:
+            completed_lectures += 1
+
+    context = {
+        "course": course,
+        "lectures": lectures,
+        "current_lecture": current_lecture,
+        "lecture_progress": lecture_progress,
+        "completed_lectures": completed_lectures,
+    }
+
     return render(request, "lms/watch-course.html", context=context)
+
+
+@login_required
+@require_POST
+def update_lecture_progress(request):
+    try:
+        data = json.loads(request.body)
+        lecture_id = data.get("lecture_id")
+        is_concluded = data.get("is_concluded", False)
+
+        lecture = Lecture.objects.get(id=lecture_id)
+
+        relation, created = UserLecturesRelation.objects.update_or_create(
+            user=request.user,
+            lecture=lecture,
+            course=lecture.course,
+            defaults={"is_concluded": is_concluded},
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "lecture_id": lecture_id,
+                "is_concluded": relation.is_concluded,
+            }
+        )
+    except Lecture.DoesNotExist:
+        return JsonResponse(
+            {"success": False, "error": "Aula não encontrada"}, status=404
+        )
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)

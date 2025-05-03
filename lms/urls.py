@@ -27,9 +27,10 @@ urlpatterns = [
         views.register_in_course,
         name="register-in-course",
     ),
+    path("course/<int:course_id>/watch/", views.watch_course, name="watch-course"),
     path(
-        "assistir-curso/<int:course_id>/",
-        views.watch_course,
-        name="watch-course",
+        "api/lecture-progress/",
+        views.update_lecture_progress,
+        name="update_lecture_progress",
     ),
 ]

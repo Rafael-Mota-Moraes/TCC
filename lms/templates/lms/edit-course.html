@@ -44,8 +44,18 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label for="video_content" class="form-label">Vídeo da aula</label>
-                            <input type="file" class="form-control" id="video_content" name="video_content" required>
+                            <label for="video_content" class="form-label">Vídeo da aula (MP4)</label>
+                            <input 
+                                type="file" 
+                                class="form-control" 
+                                id="video_content" 
+                                name="video_content" 
+                                required
+                                accept=".mp4,video/mp4"
+                            >
+                            <small class="form-text text-muted">
+                                Apenas arquivos MP4 são aceitos
+                            </small>
                         </div>
                         
                         <button type="submit" class="btn btn-success">Adicionar aula</button>
