@@ -7,6 +7,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render
+from django.db.models import Count, Q, FloatField, F, ExpressionWrapper, Sum
 
 from .models import Course, Lecture, UserCourseRegistration, UserLecturesRelation
 
@@ -21,7 +24,8 @@ def home(request):
 def my_courses(request):
     courses = Course.objects.filter(belongs_to=request.user)
 
-    registered_courses = UserCourseRegistration.objects.filter(user=request.user)
+    registered_courses = UserCourseRegistration.objects.filter(
+        user=request.user)
 
     return render(
         request,
@@ -170,13 +174,15 @@ def reorder_lectures(request, course_id):
 @login_required
 @require_POST
 def delete_lecture(request, lecture_id):
-    lecture = get_object_or_404(Lecture, id=lecture_id, course__belongs_to=request.user)
+    lecture = get_object_or_404(
+        Lecture, id=lecture_id, course__belongs_to=request.user)
     course = lecture.course
 
     try:
         lecture.delete()
 
-        remaining_lectures = Lecture.objects.filter(course=course).order_by("order")
+        remaining_lectures = Lecture.objects.filter(
+            course=course).order_by("order")
         for index, lec in enumerate(remaining_lectures):
             lec.order = index
             lec.save()
@@ -210,6 +216,61 @@ def edit_course(request, course_id):
     return render(request, "lms/edit-course.html", context)
 
 
+@login_required
+def course_stats(request, course_id):
+    course = get_object_or_404(Course, id=course_id, belongs_to=request.user)
+
+    total_lectures = course.lectures.count()
+    total_registrations = course.course_registration.count()
+
+    total_completions = UserLecturesRelation.objects.filter(
+        course=course,
+        is_concluded=True
+    ).count()
+
+    per_user = UserLecturesRelation.objects.filter(course=course) \
+        .values('user', 'user__username') \
+        .annotate(
+            concluidos=Count('lecture', filter=Q(is_concluded=True)),
+            total=Count('lecture')
+    ) \
+        .annotate(
+            pct=ExpressionWrapper(
+                F('concluidos') * 100.0 / F('total'),
+                output_field=FloatField()
+            )
+    )
+
+    full_completion_count = per_user.filter(concluidos=total_lectures).count()
+
+    avg_pct = per_user.aggregate(
+        media=Sum('pct') / Count('user')
+    )['media'] if total_registrations else 0
+
+    per_lecture = Lecture.objects.filter(course=course) \
+        .annotate(
+            concluidos=Count('userlecturesrelation', filter=Q(
+                userlecturesrelation__is_concluded=True)),
+            pct=ExpressionWrapper(
+                F('concluidos') * 100.0 / total_registrations,
+                output_field=FloatField()
+            ) if total_registrations else 0
+    )
+
+    context = {
+        'course': course,
+        'total_lectures': total_lectures,
+        'total_registrations': total_registrations,
+        'total_completions': total_completions,
+        'full_completion_count': full_completion_count,
+        'avg_completion_rate': round(avg_pct, 2),
+        'lecture_stats': per_lecture,
+        'user_stats': per_user,
+    }
+
+    return render(request, "lms/stats-course.html", context)
+
+
 def course_infos(request, course_id):
     course = Course.objects.filter(id=course_id).first()
     lectures = Lecture.objects.filter(course=course).order_by("order")
@@ -220,7 +281,8 @@ def course_infos(request, course_id):
 
     is_registered = True if registered else False
 
-    context = {"course": course, "lectures": lectures, "is_registered": is_registered}
+    context = {"course": course, "lectures": lectures,
+               "is_registered": is_registered}
     return render(request, "lms/course-infos.html", context)
 
 

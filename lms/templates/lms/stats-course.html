@@ -1,0 +1,53 @@
+{% extends "global/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Estatísticas do curso</h1>
+    <hr />
+    <h2>Título: {{ course.title }}</h2>
+    <ul>
+        <li>Total de aulas: {{ total_lectures }}</li>
+        <li>Total de inscritos: {{ total_registrations }}</li>
+        <li>Total de conclusões de aulas: {{ total_completions }}</li>
+        <li>Alunos com 100% de conclusão: {{ full_completion_count }}</li>
+        <li>Taxa média de conclusão por aluno: {{ avg_completion_rate }}%</li>
+    </ul>
+    <h3>Taxa de conclusão por aula</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Ordem</th>
+                <th>Título da Aula</th>
+                <th>Conclusões (%)</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for lecture in lecture_stats %}
+            <tr>
+                <td>{{ lecture.order }}</td>
+                <td>{{ lecture.title }}</td>
+                <td>{{ lecture.pct|floatformat:2 }}%</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <hr/>
+    <h3>Progresso dos alunos</h3>
+    <table class="table table-bordered mt-4">
+        <thead>
+            <tr>
+                <th>Aluno</th>
+                <th>Progressão (%)</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for u in user_stats %}
+            <tr>
+                <td>{{ u.user__username }}</td>
+                <td>{{ u.pct|floatformat:2 }}%</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
