@@ -33,7 +33,7 @@ SECRET_KEY = "django-insecure-u1w^r3*#&pmcv)d47t)7xlsf%-@q4swuwpj7z2hhc+5iefg09%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -60,7 +60,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "ead.urls"
-
+X_FRAME_OPTIONS = 'ALLOWALL'
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",

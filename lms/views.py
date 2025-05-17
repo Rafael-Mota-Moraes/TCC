@@ -87,10 +87,14 @@ def add_lecture(request, course_id):
         try:
             title = request.POST.get("title")
             video_content = request.FILES.get("video_content")
+            document_content = request.FILES.get("document_content")
 
-            if not title or not video_content:
+            have_content = video_content or document_content
+
+            if not title or not have_content:
                 return JsonResponse(
-                    {"success": False, "error": "Título e vídeo são obrigatórios"}
+                    {"success": False,
+                        "error": "Título e vídeo ou documento são obrigatórios"}
                 )
 
             next_order = Lecture.objects.filter(course=course).count()
@@ -99,6 +103,7 @@ def add_lecture(request, course_id):
                 course=course,
                 title=title,
                 video_content=video_content,
+                document_content=document_content,
                 order=next_order,
             )
 
@@ -114,15 +119,18 @@ def add_lecture(request, course_id):
     else:
         title = request.POST.get("title")
         video_content = request.FILES.get("video_content")
+        document_content = request.FILES.get("document_content")
 
-        if not title or not video_content:
+        have_content = video_content or document_content
+
+        if not title or not have_content:
             messages.error(request, "Título e vídeo são obrigatórios")
             return redirect("edit-course", course_id=course_id)
 
         next_order = Lecture.objects.filter(course=course).count()
 
         Lecture.objects.create(
-            course=course, title=title, video_content=video_content, order=next_order
+            course=course, title=title, video_content=video_content, document_content=document_content, order=next_order
         )
 
         messages.success(request, "Aula adicionada com sucesso!")
@@ -140,6 +148,7 @@ def get_course_lectures(request, course_id):
             "title": lecture.title,
             "order": lecture.order,
             "video_url": lecture.video_content.url if lecture.video_content else None,
+            "document_url": lecture.document_content.url if lecture.document_content else None,
         }
         for lecture in lectures
     ]

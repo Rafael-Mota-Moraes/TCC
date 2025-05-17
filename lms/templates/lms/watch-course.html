@@ -7,43 +7,65 @@
     <div class="row">
         <div class="col-lg-8">
             {% if current_lecture %}
-                <div class="card mb-4">
-                    <div class="card-header d-flex justify-content-between align-items-center bg-dark text-white">
-                        <h3>{{ current_lecture.title }}</h3>
-                        <div class="d-flex">
-                            <a href="{{ current_lecture.video_content.url }}" class="btn btn-sm btn-outline-light me-3" download>
-                                <i class="bi bi-download"></i> Baixar vídeo
-                            </a>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="markCompleted" 
-                                       data-lecture-id="{{ current_lecture.id }}" 
-                                       {% if lecture_progress|get_item:current_lecture.id %}checked{% endif %}>
-                                <label class="form-check-label text-white" for="markCompleted">Marcar como concluída</label>
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center bg-dark text-white">
+                            <h3>{{ current_lecture.title }}</h3>
+                            <div class="d-flex">
+                                {% if current_lecture.video_content %}
+                                    <a href="{{ current_lecture.video_content.url }}" class="btn btn-sm btn-outline-light me-3" download>
+                                        <i class="bi bi-download"></i> Baixar vídeo
+                                    </a>
+                                {% endif %}
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="markCompleted" 
+                                        data-lecture-id="{{ current_lecture.id }}" 
+                                        {% if lecture_progress|get_item:current_lecture.id %}checked{% endif %}>
+                                    <label class="form-check-label text-white" for="markCompleted">Marcar como concluída</label>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="video-container">
+                        <div class="card-body p-0">
                             {% if current_lecture and current_lecture.video_content %}
-                                <video 
-                                    id="lectureVideo"
-                                    controls 
-                                    width="100%"
-                                    style="background: #000"
-                                    poster="{% static 'default-thumbnail.jpg' %}"
-                                >
-                                    <source src="{{ current_lecture.video_content.url }}" 
-                                            type="{{ current_lecture.get_video_mime_type }}">
-                                    Seu navegador não suporta a tag de vídeo.
-                                </video>
+                                <div class="video-container">
                             {% else %}
-                                <div class="alert alert-danger m-3">
-                                    Vídeo não disponível ou formato inválido
+                                <div>
+                            {% endif %}
+                                {% if current_lecture and current_lecture.video_content or current_lecture.document_content %}
+                                    {% if current_lecture.video_content %}
+                                        <video 
+                                            id="lectureVideo"
+                                            controls 
+                                            width="100%"
+                                            style="background: #000"
+                                            poster="{% static 'default-thumbnail.jpg' %}"
+                                        >
+                                            <source src="{{ current_lecture.video_content.url }}" 
+                                                    type="{{ current_lecture.get_video_mime_type }}">
+                                            Seu navegador não suporta a tag de vídeo.
+                                        </video>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="alert alert-danger m-3">
+                                        Vídeo não disponível ou formato inválido
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% if current_lecture.document_content %}
+                                <div style="display: flex; justify-content: center; align-items: center; height: 200px;">
+                                    <a class="btn btn-primary" href="{{ current_lecture.document_content.url }}" target="_blank"> Esta aula possui um documento para dowload, faça download clicando aqui! </a>
                                 </div>
                             {% endif %}
                         </div>
                     </div>
-                </div>
+
+                
+
+
+                {% if not current_lecture.document_content and not current_lecture.video_content %}
+                    <div class="card mb-4">
+                        <h1>Esta aula ainda não tem nenhum conteúdo publicado</h1>
+                    </div>
+                {% endif %}
                 
                 <div class="card mb-4">
                     <div class="card-header bg-dark text-white">

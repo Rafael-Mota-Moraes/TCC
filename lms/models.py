@@ -8,6 +8,11 @@ def validate_mp4_extension(value):
         raise ValidationError("Apenas arquivos MP4 são permitidos")
 
 
+def validate_pdf_extension(value):
+    if not value.name.lower().endswith(".pdf"):
+        raise ValidationError("Apenas arquivos PDF são permitidos")
+
+
 def get_video_mime_type(filename):
     extension = filename.split(".")[-1].lower()
     return {
@@ -71,6 +76,16 @@ class Lecture(models.Model):
         verbose_name="Conteúdo em vídeo",
         upload_to="lectures/videos/",
         validators=[validate_mp4_extension],
+        null=True,
+        blank=True
+    )
+
+    document_content = models.FileField(
+        verbose_name="Conteúdo em vídeo",
+        upload_to="lectures/documents/",
+        validators=[validate_pdf_extension],
+        null=True,
+        blank=True
     )
 
     order = models.PositiveIntegerField(
