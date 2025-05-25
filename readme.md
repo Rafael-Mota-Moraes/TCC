@@ -86,4 +86,8 @@ Para desenvolvedores que desejam contribuir para o projeto, consulte a documenta
 [X] - Sistema de login \
 [X] - Matrícula em curso \
 [X] - Lista de meus cursos \
-[X] - Player de vídeo com opção de concluir aulas
+[X] - Player de vídeo com opção de concluir aulas \
+[X] - Suporte a download de pdfs \
+[X] - Tela de estatisticas do curso \
+[ ] - Área de perfil do aluno \
+[ ] - Sistema de comentário
