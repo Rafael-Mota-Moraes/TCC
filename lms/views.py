@@ -4,14 +4,18 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count, ExpressionWrapper, F, FloatField, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
-from django.db.models import Count, Q, FloatField, F, ExpressionWrapper, Sum
 
-from .models import Course, Lecture, UserCourseRegistration, UserLecturesRelation
+from .models import (
+    Comment,
+    Course,
+    Lecture,
+    UserCourseRegistration,
+    UserLecturesRelation,
+)
 
 
 def home(request):
@@ -24,8 +28,7 @@ def home(request):
 def my_courses(request):
     courses = Course.objects.filter(belongs_to=request.user)
 
-    registered_courses = UserCourseRegistration.objects.filter(
-        user=request.user)
+    registered_courses = UserCourseRegistration.objects.filter(user=request.user)
 
     return render(
         request,
@@ -93,8 +96,10 @@ def add_lecture(request, course_id):
 
             if not title or not have_content:
                 return JsonResponse(
-                    {"success": False,
-                        "error": "Título e vídeo ou documento são obrigatórios"}
+                    {
+                        "success": False,
+                        "error": "Título e vídeo ou documento são obrigatórios",
+                    }
                 )
 
             next_order = Lecture.objects.filter(course=course).count()
@@ -130,7 +135,11 @@ def add_lecture(request, course_id):
         next_order = Lecture.objects.filter(course=course).count()
 
         Lecture.objects.create(
-            course=course, title=title, video_content=video_content, document_content=document_content, order=next_order
+            course=course,
+            title=title,
+            video_content=video_content,
+            document_content=document_content,
+            order=next_order,
         )
 
         messages.success(request, "Aula adicionada com sucesso!")
@@ -148,7 +157,9 @@ def get_course_lectures(request, course_id):
             "title": lecture.title,
             "order": lecture.order,
             "video_url": lecture.video_content.url if lecture.video_content else None,
-            "document_url": lecture.document_content.url if lecture.document_content else None,
+            "document_url": lecture.document_content.url
+            if lecture.document_content
+            else None,
         }
         for lecture in lectures
     ]
@@ -183,15 +194,13 @@ def reorder_lectures(request, course_id):
 @login_required
 @require_POST
 def delete_lecture(request, lecture_id):
-    lecture = get_object_or_404(
-        Lecture, id=lecture_id, course__belongs_to=request.user)
+    lecture = get_object_or_404(Lecture, id=lecture_id, course__belongs_to=request.user)
     course = lecture.course
 
     try:
         lecture.delete()
 
-        remaining_lectures = Lecture.objects.filter(
-            course=course).order_by("order")
+        remaining_lectures = Lecture.objects.filter(course=course).order_by("order")
         for index, lec in enumerate(remaining_lectures):
             lec.order = index
             lec.save()
@@ -233,48 +242,51 @@ def course_stats(request, course_id):
     total_registrations = course.course_registration.count()
 
     total_completions = UserLecturesRelation.objects.filter(
-        course=course,
-        is_concluded=True
+        course=course, is_concluded=True
     ).count()
 
-    per_user = UserLecturesRelation.objects.filter(course=course) \
-        .values('user', 'user__username') \
+    per_user = (
+        UserLecturesRelation.objects.filter(course=course)
+        .values("user", "user__username")
         .annotate(
-            concluidos=Count('lecture', filter=Q(is_concluded=True)),
-            total=Count('lecture')
-    ) \
+            concluidos=Count("lecture", filter=Q(is_concluded=True)),
+            total=Count("lecture"),
+        )
         .annotate(
             pct=ExpressionWrapper(
-                F('concluidos') * 100.0 / F('total'),
-                output_field=FloatField()
+                F("concluidos") * 100.0 / F("total"), output_field=FloatField()
             )
+        )
     )
 
     full_completion_count = per_user.filter(concluidos=total_lectures).count()
 
-    avg_pct = per_user.aggregate(
-        media=Sum('pct') / Count('user')
-    )['media'] if total_registrations else 0
+    avg_pct = (
+        per_user.aggregate(media=Sum("pct") / Count("user"))["media"]
+        if total_registrations
+        else 0
+    )
 
-    per_lecture = Lecture.objects.filter(course=course) \
-        .annotate(
-            concluidos=Count('userlecturesrelation', filter=Q(
-                userlecturesrelation__is_concluded=True)),
-            pct=ExpressionWrapper(
-                F('concluidos') * 100.0 / total_registrations,
-                output_field=FloatField()
-            ) if total_registrations else 0
+    per_lecture = Lecture.objects.filter(course=course).annotate(
+        concluidos=Count(
+            "userlecturesrelation", filter=Q(userlecturesrelation__is_concluded=True)
+        ),
+        pct=ExpressionWrapper(
+            F("concluidos") * 100.0 / total_registrations, output_field=FloatField()
+        )
+        if total_registrations
+        else 0,
     )
 
     context = {
-        'course': course,
-        'total_lectures': total_lectures,
-        'total_registrations': total_registrations,
-        'total_completions': total_completions,
-        'full_completion_count': full_completion_count,
-        'avg_completion_rate': round(avg_pct, 2),
-        'lecture_stats': per_lecture,
-        'user_stats': per_user,
+        "course": course,
+        "total_lectures": total_lectures,
+        "total_registrations": total_registrations,
+        "total_completions": total_completions,
+        "full_completion_count": full_completion_count,
+        "avg_completion_rate": round(avg_pct, 2),
+        "lecture_stats": per_lecture,
+        "user_stats": per_user,
     }
 
     return render(request, "lms/stats-course.html", context)
@@ -290,8 +302,7 @@ def course_infos(request, course_id):
 
     is_registered = True if registered else False
 
-    context = {"course": course, "lectures": lectures,
-               "is_registered": is_registered}
+    context = {"course": course, "lectures": lectures, "is_registered": is_registered}
     return render(request, "lms/course-infos.html", context)
 
 
@@ -372,12 +383,22 @@ def watch_course(request, course_id):
         if user_lecture.is_concluded:
             completed_lectures += 1
 
+    comments = (
+        Comment.objects.filter(lecture=current_lecture, parent__isnull=True)
+        .select_related("posted_by")
+        .prefetch_related("replies")
+        .order_by("-id")
+        if current_lecture
+        else []
+    )
+
     context = {
         "course": course,
         "lectures": lectures,
         "current_lecture": current_lecture,
         "lecture_progress": lecture_progress,
         "completed_lectures": completed_lectures,
+        "comments": comments,
     }
 
     return render(request, "lms/watch-course.html", context=context)
@@ -413,3 +434,25 @@ def update_lecture_progress(request):
         )
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+@require_POST
+def add_comment(request):
+    user = request.user if request.user.is_authenticated else None
+    content = request.POST.get("content")
+    lecture_id = request.POST.get("lecture_id")
+    parent_id = request.POST.get("parent_id")
+
+    if not content or not lecture_id:
+        return redirect(request.META.get("HTTP_REFERER", "/"))
+
+    lecture = Lecture.objects.get(id=lecture_id)
+    parent = Comment.objects.get(id=parent_id) if parent_id else None
+
+    Comment.objects.create(
+        posted_by=user,
+        content=content,
+        lecture=lecture,
+        parent=parent,
+    )
+    return redirect(request.META.get("HTTP_REFERER", "/"))

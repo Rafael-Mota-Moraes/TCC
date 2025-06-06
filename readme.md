@@ -89,5 +89,4 @@ Para desenvolvedores que desejam contribuir para o projeto, consulte a documenta
 [X] - Player de vídeo com opção de concluir aulas \
 [X] - Suporte a download de pdfs \
 [X] - Tela de estatisticas do curso \
-[ ] - Área de perfil do aluno \
-[ ] - Sistema de comentário
+[X] - Sistema de comentário

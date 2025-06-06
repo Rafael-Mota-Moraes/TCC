@@ -76,6 +76,68 @@
                         <p class="text-muted">Curso: {{ course.title }}</p>
                     </div>
                 </div>
+
+                <div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+        <h4>Comentários</h4>
+    </div>
+    <div class="card-body">
+        {% if user.is_authenticated %}
+            <form method="post" action="{% url 'add_comment' %}">
+                {% csrf_token %}
+                <input type="hidden" name="lecture_id" value="{{ current_lecture.id }}">
+                <div class="mb-3">
+                    <textarea class="form-control" name="content" rows="3" placeholder="Escreva seu comentário..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Comentar</button>
+            </form>
+            <hr>
+        {% else %}
+            <div class="alert alert-info">
+                <a href="{% url 'login' %}">Faça login</a> para comentar.
+            </div>
+        {% endif %}
+
+        {% for comment in comments %}
+            <div class="mb-3">
+                <div class="d-flex align-items-center mb-1">
+                    <strong>{{ comment.posted_by.username|default:"Anônimo" }}</strong>
+                    <span class="text-muted ms-2" style="font-size: 0.9em;">{{ comment.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+                <div class="border rounded p-2 bg-light">
+                    {{ comment.content|linebreaks }}
+                </div>
+                <a class="btn btn-link btn-sm mt-1" data-bs-toggle="collapse" href="#replyForm{{ comment.id }}" role="button" aria-expanded="false" aria-controls="replyForm{{ comment.id }}">
+                    Responder
+                </a>
+                <div class="collapse" id="replyForm{{ comment.id }}">
+                    <form method="post" action="{% url 'add_comment' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="lecture_id" value="{{ current_lecture.id }}">
+                        <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                        <div class="mb-2">
+                            <textarea class="form-control" name="content" rows="2" placeholder="Sua resposta..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-secondary btn-sm">Responder</button>
+                    </form>
+                </div>
+                {% for reply in comment.replies.all %}
+                    <div class="ms-4 mt-2">
+                        <div class="d-flex align-items-center mb-1">
+                            <strong>{{ reply.posted_by.username|default:"Anônimo" }}</strong>
+                            <span class="text-muted ms-2" style="font-size: 0.9em;">{{ reply.created_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                        <div class="border rounded p-2 bg-white">
+                            {{ reply.content|linebreaks }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% empty %}
+            <div class="alert alert-secondary">Nenhum comentário ainda. Seja o primeiro a comentar!</div>
+        {% endfor %}
+    </div>
+</div>
             {% else %}
                 <div class="alert alert-info">
                     Este curso ainda não possui aulas disponíveis.

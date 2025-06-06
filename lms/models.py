@@ -77,7 +77,7 @@ class Lecture(models.Model):
         upload_to="lectures/videos/",
         validators=[validate_mp4_extension],
         null=True,
-        blank=True
+        blank=True,
     )
 
     document_content = models.FileField(
@@ -85,7 +85,7 @@ class Lecture(models.Model):
         upload_to="lectures/documents/",
         validators=[validate_pdf_extension],
         null=True,
-        blank=True
+        blank=True,
     )
 
     order = models.PositiveIntegerField(
@@ -109,6 +109,34 @@ class Lecture(models.Model):
         return get_video_mime_type(self.video_content.name)
 
 
+class Comment(models.Model):
+    posted_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    content = models.TextField(
+        verbose_name="O comentário",
+        blank=True,
+        null=True,
+    )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="replies",
+    )
+    lecture = models.ForeignKey(
+        Lecture,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+
+
 class UserCourseRegistration(models.Model):
     user = models.ForeignKey(
         User,
@@ -116,6 +144,7 @@ class UserCourseRegistration(models.Model):
         null=True,
         blank=True,
     )
+
     course = models.ForeignKey(
         Course,
         related_name="course_registration",
